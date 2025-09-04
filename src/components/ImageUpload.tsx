@@ -55,7 +55,7 @@ export default function ImageUpload({ userInfo, onImageUpload, onBack }: ImageUp
     };
 
     return (
-        <div 
+        <div
             className="min-h-screen relative overflow-hidden bg-cover bg-center bg-fixed"
             style={{ backgroundImage: 'url(/bg_hero.png)' }}
         >

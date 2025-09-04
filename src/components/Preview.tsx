@@ -257,7 +257,7 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
     }, [uploadedImage, userInfo.status, imagePosition]);
 
     return (
-        <div 
+        <div
             className="min-h-screen relative overflow-hidden bg-cover bg-center bg-fixed"
             style={{ backgroundImage: 'url(/bg_hero.png)' }}
         >
@@ -385,20 +385,15 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
                                 <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4 mt-4">
                                     <h3 className="text-sm font-semibold text-white mb-2">Your Caption:</h3>
                                     <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded p-3 text-sm text-white mb-3">
-                                        🎓 {userInfo.name} | {userInfo.section} | {userInfo.status.charAt(0).toUpperCase() + userInfo.status.slice(1)}
-                                        <br />
-                                        EXPLORERS IN COMMUNICATION AND INFORMATION TECHNOLOGY
-                                        <br />
-                                        HOME OF THE ORIGINAL CHAMPIONS 🏆
-                                        <br />
-                                        #EXPLICITDPBlast #{userInfo.status.toUpperCase()} #BSIT #ExplorersPride
+                                        What's up, Explorers! I'm {userInfo.name} from {userInfo.section}, and I'm ready to kick off this semester as a proud BSIT student here at 𝗣𝗼𝗹𝘆𝘁𝗲𝗰𝗵𝗻𝗶𝗰 𝗨𝗻𝗶𝘃𝗲𝗿𝘀𝗶𝘁𝘆 𝗼𝗳 𝘁𝗵𝗲 𝗣𝗵𝗶𝗹𝗶𝗽𝗽𝗶𝗻𝗲𝘀 – 𝗦𝗮𝗻 𝗣𝗲𝗱𝗿𝗼 𝗖𝗮𝗺𝗽𝘂𝘀.
+                                        <br /><br />
+                                        A new chapter begins, and I'm all set to face the challenges, embrace the opportunities, and make the most out of every moment this semester has to offer. Here's to growth, learning, and memories worth keeping as we continue this BSIT journey together.
                                     </div>
                                     <button
                                         onClick={() => {
-                                            const caption = `🎓 ${userInfo.name} | ${userInfo.section} | ${userInfo.status.charAt(0).toUpperCase() + userInfo.status.slice(1)} 
-EXPLORERS IN COMMUNICATION AND INFORMATION TECHNOLOGY
-HOME OF THE ORIGINAL CHAMPIONS 🏆
-#EXPLICITDPBlast #${userInfo.status.toUpperCase()} #BSIT #ExplorersPride`;
+                                            const caption = `What's up, Explorers! I'm ${userInfo.name} from ${userInfo.section}, and I'm ready to kick off this semester as a proud BSIT student here at 𝗣𝗼𝗹𝘆𝘁𝗲𝗰𝗵𝗻𝗶𝗰 𝗨𝗻𝗶𝘃𝗲𝗿𝘀𝗶𝘁𝘆 𝗼𝗳 𝘁𝗵𝗲 𝗣𝗵𝗶𝗹𝗶𝗽𝗽𝗶𝗻𝗲𝘀 – 𝗦𝗮𝗻 𝗣𝗲𝗱𝗿𝗼 𝗖𝗮𝗺𝗽𝘂𝘀.
+
+A new chapter begins, and I'm all set to face the challenges, embrace the opportunities, and make the most out of every moment this semester has to offer. Here's to growth, learning, and memories worth keeping as we continue this BSIT journey together.`;
                                             navigator.clipboard.writeText(caption);
                                             alert('Caption copied to clipboard!');
                                         }}
