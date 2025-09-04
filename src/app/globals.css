@@ -28,3 +28,72 @@ body {
   background-position: center !important;
   background-repeat: no-repeat !important;
 }
+
+/* Custom slider styles for better visibility and performance */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 12px;
+  border-radius: 6px;
+  outline: none;
+  transition: none; /* Remove transition for better performance */
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Remove default track styling */
+.slider::-webkit-slider-track {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 12px;
+  border-radius: 6px;
+}
+
+.slider::-moz-range-track {
+  height: 12px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+}
+
+/* Active and focus states */
+.slider:active::-webkit-slider-thumb {
+  transform: scale(1.1);
+}
+
+.slider:active::-moz-range-thumb {
+  transform: scale(1.1);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .slider::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  .slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
+}

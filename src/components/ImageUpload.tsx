@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { UserInfo } from '@/types';
+import BackgroundImage from './BackgroundImage';
 
 interface ImageUploadProps {
     userInfo: UserInfo;
@@ -55,10 +56,7 @@ export default function ImageUpload({ userInfo, onImageUpload, onBack }: ImageUp
     };
 
     return (
-        <div
-            className="min-h-screen relative overflow-hidden bg-cover bg-center bg-fixed"
-            style={{ backgroundImage: 'url(/bg_hero.png)' }}
-        >
+        <BackgroundImage>
             <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
                 <div className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-xl p-8 w-full max-w-lg border border-white/30">
                     <div className="text-center mb-8">
@@ -132,6 +130,6 @@ export default function ImageUpload({ userInfo, onImageUpload, onBack }: ImageUp
                     </div>
                 </div>
             </div>
-        </div>
+        </BackgroundImage>
     );
 }

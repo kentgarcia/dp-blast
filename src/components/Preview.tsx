@@ -3,6 +3,24 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { UserInfo, ImagePosition } from '@/types';
+import BackgroundImage from './BackgroundImage';
+
+// Debounce hook for performance optimization
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [value, delay]);
+
+    return debouncedValue;
+}
 
 interface PreviewProps {
     userInfo: UserInfo;
@@ -19,6 +37,33 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [isExporting, setIsExporting] = useState(false);
+
+    // Local state for slider values to prevent lag
+    const [localScale, setLocalScale] = useState(imagePosition.scale);
+    const [localX, setLocalX] = useState(imagePosition.x);
+    const [localY, setLocalY] = useState(imagePosition.y);
+
+    // Debounce the position updates to improve performance
+    const debouncedScale = useDebounce(localScale, 100);
+    const debouncedX = useDebounce(localX, 100);
+    const debouncedY = useDebounce(localY, 100);
+
+    // Update parent when debounced values change
+    useEffect(() => {
+        onPositionUpdate({
+            ...imagePosition,
+            scale: debouncedScale,
+            x: debouncedX,
+            y: debouncedY
+        });
+    }, [debouncedScale, debouncedX, debouncedY, onPositionUpdate, imagePosition]);
+
+    // Sync local state when imagePosition prop changes from external sources
+    useEffect(() => {
+        setLocalScale(imagePosition.scale);
+        setLocalX(imagePosition.x);
+        setLocalY(imagePosition.y);
+    }, [imagePosition.scale, imagePosition.x, imagePosition.y]);
 
     // Cache loaded images to prevent re-loading on every position change
     const [userImageLoaded, setUserImageLoaded] = useState<HTMLImageElement | null>(null);
@@ -46,6 +91,13 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
         return fallbackFrameMap[userInfo.status];
     };
 
+    // Build an optimized URL using Next.js image optimizer for fast preview
+    const getOptimizedUrl = (url: string, width: number, quality = 70) => {
+        // Next.js image optimizer route works for public assets as well
+        const params = new URLSearchParams({ url, w: String(width), q: String(quality) });
+        return `/_next/image?${params.toString()}`;
+    };
+
     // High-resolution dimensions (3000x3000)
     const HIGH_RES_SIZE = 3000;
     // Preview dimensions (400x400)
@@ -59,12 +111,22 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
 
             const img = new Image();
             img.crossOrigin = 'anonymous';
+            img.decoding = 'async';
 
             await new Promise((resolve, reject) => {
                 img.onload = resolve;
                 img.onerror = reject;
                 img.src = uploadedImage;
             });
+
+            // Initialize default draw size using the actual image intrinsic size if not provided
+            if (!imagePosition.width || !imagePosition.height) {
+                onPositionUpdate({
+                    ...imagePosition,
+                    width: Math.min(img.width, PREVIEW_SIZE),
+                    height: Math.min(img.height, PREVIEW_SIZE),
+                });
+            }
 
             setUserImageLoaded(img);
         };
@@ -76,12 +138,15 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
         const loadFrameImage = async () => {
             const img = new Image();
             img.crossOrigin = 'anonymous';
+            img.decoding = 'async';
+            // Use smaller, optimized frame for preview canvas
+            const optimizedUrl = getOptimizedUrl(getFrameUrl(), PREVIEW_SIZE, 70);
 
             try {
                 await new Promise((resolve, reject) => {
                     img.onload = resolve;
                     img.onerror = reject;
-                    img.src = getFrameUrl();
+                    img.src = optimizedUrl;
                 });
             } catch (error) {
                 // Fallback to SVG if PNG not found
@@ -254,10 +319,15 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
     };
 
     const handleScaleChange = (scale: number) => {
-        onPositionUpdate({
-            ...imagePosition,
-            scale,
-        });
+        setLocalScale(scale);
+    };
+
+    const handleXChange = (x: number) => {
+        setLocalX(x);
+    };
+
+    const handleYChange = (y: number) => {
+        setLocalY(y);
     };
 
     useEffect(() => {
@@ -265,10 +335,7 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
     }, [uploadedImage, userInfo.status, imagePosition]);
 
     return (
-        <div
-            className="min-h-screen relative overflow-hidden bg-cover bg-center"
-            style={{ backgroundImage: 'url(/bg_hero.png)' }}
-        >
+        <BackgroundImage>
             <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
                 <div className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-xl p-8 w-full max-w-4xl border border-white/30">
                     <div className="text-center mb-8">
@@ -302,16 +369,19 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
                             {/* Size Control */}
                             <div className="mb-6">
                                 <label className="block text-sm font-medium text-white mb-2">
-                                    Image Size: {Math.round(imagePosition.scale * 100)}%
+                                    Image Size: {Math.round(localScale * 100)}%
                                 </label>
                                 <input
                                     type="range"
                                     min="0.5"
                                     max="3"
                                     step="0.1"
-                                    value={imagePosition.scale}
+                                    value={localScale}
                                     onChange={(e) => handleScaleChange(parseFloat(e.target.value))}
-                                    className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                                    className="w-full h-3 bg-white/80 rounded-lg appearance-none cursor-pointer slider"
+                                    style={{
+                                        background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((localScale - 0.5) / (3 - 0.5)) * 100}%, rgba(255,255,255,0.3) ${((localScale - 0.5) / (3 - 0.5)) * 100}%, rgba(255,255,255,0.3) 100%)`
+                                    }}
                                 />
                             </div>
 
@@ -325,12 +395,12 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
                                         type="range"
                                         min="-200"
                                         max="200"
-                                        value={imagePosition.x}
-                                        onChange={(e) => onPositionUpdate({
-                                            ...imagePosition,
-                                            x: parseInt(e.target.value)
-                                        })}
-                                        className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                                        value={localX}
+                                        onChange={(e) => handleXChange(parseInt(e.target.value))}
+                                        className="w-full h-3 bg-white/80 rounded-lg appearance-none cursor-pointer slider"
+                                        style={{
+                                            background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((localX + 200) / 400) * 100}%, rgba(255,255,255,0.3) ${((localX + 200) / 400) * 100}%, rgba(255,255,255,0.3) 100%)`
+                                        }}
                                     />
                                 </div>
                                 <div>
@@ -341,12 +411,12 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
                                         type="range"
                                         min="-200"
                                         max="200"
-                                        value={imagePosition.y}
-                                        onChange={(e) => onPositionUpdate({
-                                            ...imagePosition,
-                                            y: parseInt(e.target.value)
-                                        })}
-                                        className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                                        value={localY}
+                                        onChange={(e) => handleYChange(parseInt(e.target.value))}
+                                        className="w-full h-3 bg-white/80 rounded-lg appearance-none cursor-pointer slider"
+                                        style={{
+                                            background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((localY + 200) / 400) * 100}%, rgba(255,255,255,0.3) ${((localY + 200) / 400) * 100}%, rgba(255,255,255,0.3) 100%)`
+                                        }}
                                     />
                                 </div>
                             </div>
@@ -421,6 +491,6 @@ A new chapter begins, and I\'m all set to face the challenges, embrace the oppor
                     </div>
                 </div>
             </div>
-        </div>
+        </BackgroundImage>
     );
 }

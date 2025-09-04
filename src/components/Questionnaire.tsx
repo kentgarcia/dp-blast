@@ -50,7 +50,7 @@ export default function Questionnaire({ onSubmit, onBack }: QuestionnaireProps) 
                                 type="text"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white placeholder-white/70"
+                                className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-white/50 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition text-gray-900 placeholder-gray-600"
                                 placeholder="Enter your full name"
                                 required
                             />
@@ -64,17 +64,17 @@ export default function Questionnaire({ onSubmit, onBack }: QuestionnaireProps) 
                                 id="section"
                                 value={formData.section}
                                 onChange={(e) => setFormData({ ...formData, section: e.target.value })}
-                                className="w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white"
+                                className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-white/50 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition text-gray-900"
                                 required
                             >
-                                <option value="" className="text-gray-800">Select your section</option>
-                                <option value="BSIT 1-1" className="text-gray-800">BSIT 1-1</option>
-                                <option value="BSIT 1-2" className="text-gray-800">BSIT 1-2</option>
-                                <option value="BSIT 2-1" className="text-gray-800">BSIT 2-1</option>
-                                <option value="BSIT 2-2" className="text-gray-800">BSIT 2-2</option>
-                                <option value="BSIT 3-1" className="text-gray-800">BSIT 3-1</option>
-                                <option value="BSIT 3-2" className="text-gray-800">BSIT 3-2</option>
-                                <option value="BSIT 4-1" className="text-gray-800">BSIT 4-1</option>
+                                <option value="" className="text-gray-600">Select your section</option>
+                                <option value="BSIT 1-1" className="text-gray-900">BSIT 1-1</option>
+                                <option value="BSIT 1-2" className="text-gray-900">BSIT 1-2</option>
+                                <option value="BSIT 2-1" className="text-gray-900">BSIT 2-1</option>
+                                <option value="BSIT 2-2" className="text-gray-900">BSIT 2-2</option>
+                                <option value="BSIT 3-1" className="text-gray-900">BSIT 3-1</option>
+                                <option value="BSIT 3-2" className="text-gray-900">BSIT 3-2</option>
+                                <option value="BSIT 4-1" className="text-gray-900">BSIT 4-1</option>
                             </select>
                         </div>
 
@@ -86,14 +86,14 @@ export default function Questionnaire({ onSubmit, onBack }: QuestionnaireProps) 
                                 id="status"
                                 value={formData.status}
                                 onChange={(e) => setFormData({ ...formData, status: e.target.value as Status })}
-                                className="w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-white/50 outline-none transition text-white"
+                                className="w-full px-4 py-3 bg-white/80 backdrop-blur-sm border border-white/50 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition text-gray-900"
                                 required
                             >
-                                <option value="" className="text-gray-800">Select your status</option>
-                                <option value="freshman" className="text-gray-800">Freshman</option>
-                                <option value="sophomore" className="text-gray-800">Sophomore</option>
-                                <option value="junior" className="text-gray-800">Junior</option>
-                                <option value="senior" className="text-gray-800">Senior</option>
+                                <option value="" className="text-gray-600">Select your status</option>
+                                <option value="freshman" className="text-gray-900">Freshman</option>
+                                <option value="sophomore" className="text-gray-900">Sophomore</option>
+                                <option value="junior" className="text-gray-900">Junior</option>
+                                <option value="senior" className="text-gray-900">Senior</option>
                             </select>
                         </div>
 

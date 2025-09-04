@@ -10,7 +10,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "EXPLICIT DP Blast - Custom Profile Picture Generator",
+  title: "EXPLICIT DP Blast",
   description: "Create your custom profile picture with status-specific frames for your organization",
   icons: {
     icon: '/logo_explicit.png',

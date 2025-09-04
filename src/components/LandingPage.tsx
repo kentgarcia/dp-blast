@@ -9,7 +9,7 @@ interface LandingPageProps {
 
 export default function LandingPage({ onGetStarted }: LandingPageProps) {
     return (
-        <BackgroundImage>
+        <BackgroundImage priority>
 
             {/* Content Overlay */}
             <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6">
@@ -20,6 +20,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                         alt="EXPLICIT Logo"
                         width={200}
                         height={200}
+                        sizes="(max-width: 768px) 8rem, (max-width: 1024px) 10rem, 12rem"
                         className="w-auto h-32 md:h-40 lg:h-48"
                         priority
                     />
@@ -50,6 +51,12 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                 <p className="text-white/90 text-sm md:text-base mt-6 text-center max-w-2xl">
                     Upload your photo, add your information, and create your personalized display picture with your status frame.
                 </p>
+
+                {/* Credits */}
+                <div className="absolute bottom-4 right-4 text-white/60 text-xs">
+                    <p>Website: Kent</p>
+                    <p>DP Frame: Jhayciel Santiago</p>
+                </div>
             </div>
         </BackgroundImage>
     );
