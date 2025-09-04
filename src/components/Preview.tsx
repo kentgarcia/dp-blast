@@ -330,6 +330,8 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
         scheduleDraw();
     }, [uploadedImage, userInfo.status, scheduleDraw]);
 
+    const statusLabel = userInfo.status.charAt(0).toUpperCase() + userInfo.status.slice(1);
+
     return (
         <BackgroundImage>
             <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
@@ -454,16 +456,30 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
                                 {/* Caption Section */}
                                 <div className="bg-black/30 md:bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-4 mt-4">
                                     <h3 className="text-sm font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] mb-2">Your Caption:</h3>
-                                    <div className="bg-white/20 md:bg-white/20 backdrop-blur-sm border border-white/30 rounded p-3 text-sm text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] mb-3">
-                                        What&apos;s up, Explorers! I&apos;m {userInfo.name} from {userInfo.section}, and I&apos;m ready to kick off this semester as a proud BSIT student here at 𝗣𝗼𝗹𝘆𝘁𝗲𝗰𝗵𝗻𝗶𝗰 𝗨𝗻𝗶𝘃𝗲𝗿𝘀𝗶𝘁𝘆 𝗼𝗳 𝘁𝗵𝗲 𝗣𝗵𝗶𝗹𝗶𝗽𝗽𝗶𝗻𝗲𝘀 – 𝗦𝗮𝗻 𝗣𝗲𝗱𝗿𝗼 𝗖𝗮𝗺𝗽𝘂𝘀.
-                                        <br /><br />
-                                        A new chapter begins, and I&apos;m all set to face the challenges, embrace the opportunities, and make the most out of every moment this semester has to offer. Here&apos;s to growth, learning, and memories worth keeping as we continue this BSIT journey together.
+                                    <div className="bg-white/20 md:bg-white/20 backdrop-blur-sm border border-white/30 rounded p-3 text-sm text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] mb-3 whitespace-pre-wrap">
+                                        Initializing… ⚙️💻🔧
+
+                                        The wait is over—Academic Year 2025–2026 is officially here. As BSIT students, we're not just entering classrooms; we're stepping into a space where ideas turn into code, and code turns into impact.
+
+                                        I'm {userInfo.name}, a {statusLabel} Bachelor of Science in Information Technology student at Polytechnic University of the Philippines – San Pedro Campus. Here at PUP, we're more than just students—we're builders, problem-solvers, and visionaries shaping tomorrow's digital world.
+
+                                        This year, let's write better code, craft smarter solutions, and chase bigger dreams. Together, we'll take on challenges, spark innovation, and push the limits of what's possible.
+
+                                        Frame: Jhayciel Santiago
+                                        Caption: Jenmarc Ronquillo
                                     </div>
                                     <button
                                         onClick={() => {
-                                            const caption = `What\'s up, Explorers! I\'m ${userInfo.name} from ${userInfo.section}, and I\'m ready to kick off this semester as a proud BSIT student here at 𝗣𝗼𝗹𝘆𝘁𝗲𝗰𝗵𝗻𝗶𝗰 𝗨𝗻𝗶𝘃𝗲𝗿𝘀𝗶𝘁𝘆 𝗼𝗳 𝘁𝗵𝗲 𝗣𝗵𝗶𝗹𝗶𝗽𝗽𝗶𝗻𝗲𝘀 – 𝗦𝗮𝗻 𝗣𝗲𝗱𝗿𝗼 𝗖𝗮𝗺𝗽𝘂𝘀.
+                                            const caption = `Initializing… ⚙️💻🔧
 
-A new chapter begins, and I\'m all set to face the challenges, embrace the opportunities, and make the most out of every moment this semester has to offer. Here\'s to growth, learning, and memories worth keeping as we continue this BSIT journey together.`;
+The wait is over—Academic Year 2025–2026 is officially here. As BSIT students, we're not just entering classrooms; we're stepping into a space where ideas turn into code, and code turns into impact.
+
+I'm ${userInfo.name}, a ${statusLabel} Bachelor of Science in Information Technology student at Polytechnic University of the Philippines – San Pedro Campus. Here at PUP, we're more than just students—we're builders, problem-solvers, and visionaries shaping tomorrow's digital world.
+
+This year, let's write better code, craft smarter solutions, and chase bigger dreams. Together, we'll take on challenges, spark innovation, and push the limits of what's possible.
+
+Frame: Jhayciel Santiago
+Caption: Jenmarc Ronquillo`;
                                             navigator.clipboard.writeText(caption);
                                             toast.success('Caption copied to clipboard! 📋', {
                                                 duration: 2000,
