@@ -1,25 +1,29 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { UserInfo, ImagePosition } from '@/types';
 import BackgroundImage from './BackgroundImage';
 
-// Debounce hook for performance optimization
-function useDebounce<T>(value: T, delay: number): T {
-    const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedValue(value);
-        }, delay);
-
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [value, delay]);
-
-    return debouncedValue;
+// Simple RAF throttle for draw calls
+function useRafThrottle(callback: () => void) {
+    const rafId = useRef<number | null>(null);
+    const queued = useRef(false);
+    const tick = useCallback(() => {
+        queued.current = false;
+        callback();
+        rafId.current = null;
+    }, [callback]);
+    const request = useCallback(() => {
+        if (rafId.current == null && !queued.current) {
+            queued.current = true;
+            rafId.current = requestAnimationFrame(tick);
+        }
+    }, [tick]);
+    useEffect(() => () => {
+        if (rafId.current != null) cancelAnimationFrame(rafId.current);
+    }, []);
+    return request;
 }
 
 interface PreviewProps {
@@ -38,32 +42,20 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [isExporting, setIsExporting] = useState(false);
 
-    // Local state for slider values to prevent lag
+    // Local UI state for immediate, smooth movement
     const [localScale, setLocalScale] = useState(imagePosition.scale);
     const [localX, setLocalX] = useState(imagePosition.x);
     const [localY, setLocalY] = useState(imagePosition.y);
 
-    // Debounce the position updates to improve performance
-    const debouncedScale = useDebounce(localScale, 100);
-    const debouncedX = useDebounce(localX, 100);
-    const debouncedY = useDebounce(localY, 100);
-
-    // Update parent when debounced values change
-    useEffect(() => {
+    // Push updates to parent sparingly (on interaction end)
+    const commitPosition = useCallback((next: { x?: number; y?: number; scale?: number }) => {
         onPositionUpdate({
             ...imagePosition,
-            scale: debouncedScale,
-            x: debouncedX,
-            y: debouncedY
+            x: next.x ?? imagePosition.x,
+            y: next.y ?? imagePosition.y,
+            scale: next.scale ?? imagePosition.scale,
         });
-    }, [debouncedScale, debouncedX, debouncedY, onPositionUpdate, imagePosition]);
-
-    // Sync local state when imagePosition prop changes from external sources
-    useEffect(() => {
-        setLocalScale(imagePosition.scale);
-        setLocalX(imagePosition.x);
-        setLocalY(imagePosition.y);
-    }, [imagePosition.scale, imagePosition.x, imagePosition.y]);
+    }, [imagePosition, onPositionUpdate]);
 
     // Cache loaded images to prevent re-loading on every position change
     const [userImageLoaded, setUserImageLoaded] = useState<HTMLImageElement | null>(null);
@@ -179,13 +171,13 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
 
         try {
             // Draw user image with current position and scale
-            const scaledWidth = imagePosition.width * imagePosition.scale;
-            const scaledHeight = imagePosition.height * imagePosition.scale;
+            const scaledWidth = imagePosition.width * localScale;
+            const scaledHeight = imagePosition.height * localScale;
 
             ctx.drawImage(
                 userImageLoaded,
-                imagePosition.x,
-                imagePosition.y,
+                localX,
+                localY,
                 scaledWidth,
                 scaledHeight
             );
@@ -196,14 +188,16 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
         } catch (error) {
             console.error('Error drawing preview:', error);
         }
-    }, [userImageLoaded, frameImageLoaded, imagePosition]);
+    }, [userImageLoaded, frameImageLoaded, imagePosition.width, imagePosition.height, localScale, localX, localY]);
+
+    const scheduleDraw = useRafThrottle(drawPreview);
 
     // Draw preview whenever images or position changes
     useEffect(() => {
         if (userImageLoaded && frameImageLoaded) {
-            drawPreview();
+            scheduleDraw();
         }
-    }, [drawPreview]);
+    }, [scheduleDraw, userImageLoaded, frameImageLoaded]);
 
     const exportHighRes = async () => {
         setIsExporting(true);
@@ -232,10 +226,10 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
             });
 
             // Scale up the position and dimensions for high-res export
-            const highResX = imagePosition.x * SCALE_RATIO;
-            const highResY = imagePosition.y * SCALE_RATIO;
-            const highResWidth = imagePosition.width * imagePosition.scale * SCALE_RATIO;
-            const highResHeight = imagePosition.height * imagePosition.scale * SCALE_RATIO;
+            const highResX = localX * SCALE_RATIO;
+            const highResY = localY * SCALE_RATIO;
+            const highResWidth = imagePosition.width * localScale * SCALE_RATIO;
+            const highResHeight = imagePosition.height * localScale * SCALE_RATIO;
 
             ctx.drawImage(
                 userImg,
@@ -287,62 +281,64 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
         }
     };
 
-    const handleMouseDown = (e: React.MouseEvent) => {
+    const handlePointerDown = (e: React.PointerEvent) => {
         setIsDragging(true);
         const rect = previewCanvasRef.current?.getBoundingClientRect();
         if (rect) {
             setDragStart({
-                x: e.clientX - rect.left - imagePosition.x,
-                y: e.clientY - rect.top - imagePosition.y,
+                x: e.clientX - rect.left - localX,
+                y: e.clientY - rect.top - localY,
             });
         }
     };
 
-    const handleMouseMove = (e: React.MouseEvent) => {
+    const handlePointerMove = (e: React.PointerEvent) => {
         if (!isDragging) return;
 
         const rect = previewCanvasRef.current?.getBoundingClientRect();
         if (rect) {
             const newX = e.clientX - rect.left - dragStart.x;
             const newY = e.clientY - rect.top - dragStart.y;
-
-            onPositionUpdate({
-                ...imagePosition,
-                x: newX,
-                y: newY,
-            });
+            setLocalX(newX);
+            setLocalY(newY);
+            scheduleDraw();
         }
     };
 
-    const handleMouseUp = () => {
+    const handlePointerUp = () => {
         setIsDragging(false);
+        // Commit final position
+        commitPosition({ x: localX, y: localY });
     };
 
     const handleScaleChange = (scale: number) => {
         setLocalScale(scale);
+        scheduleDraw();
     };
 
     const handleXChange = (x: number) => {
         setLocalX(x);
+        scheduleDraw();
     };
 
     const handleYChange = (y: number) => {
         setLocalY(y);
+        scheduleDraw();
     };
 
     useEffect(() => {
-        drawPreview();
-    }, [uploadedImage, userInfo.status, imagePosition]);
+        scheduleDraw();
+    }, [uploadedImage, userInfo.status, scheduleDraw]);
 
     return (
         <BackgroundImage>
             <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-                <div className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-xl p-8 w-full max-w-4xl border border-white/30">
+                <div className="bg-white/15 md:bg-white/20 backdrop-blur-xl rounded-2xl shadow-xl p-6 md:p-8 w-full max-w-4xl border border-white/30">
                     <div className="text-center mb-8">
-                        <h1 className="text-2xl font-bold text-white mb-2">
+                        <h1 className="text-2xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] mb-2">
                             Adjust Your EXPLICIT DP
                         </h1>
-                        <p className="text-white/90">
+                        <p className="text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
                             Drag to move your photo, use the slider to resize, then export in high resolution
                         </p>
                     </div>
@@ -358,11 +354,17 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
                                     ref={previewCanvasRef}
                                     width={PREVIEW_SIZE}
                                     height={PREVIEW_SIZE}
-                                    className="w-full h-full cursor-move"
-                                    onMouseDown={handleMouseDown}
-                                    onMouseMove={handleMouseMove}
-                                    onMouseUp={handleMouseUp}
-                                    onMouseLeave={handleMouseUp}
+                                    className="w-full h-full cursor-move touch-none"
+                                    onPointerDown={(e) => {
+                                        (e.currentTarget as HTMLCanvasElement).setPointerCapture(e.pointerId);
+                                        handlePointerDown(e);
+                                    }}
+                                    onPointerMove={(e) => handlePointerMove(e)}
+                                    onPointerUp={(e) => {
+                                        (e.currentTarget as HTMLCanvasElement).releasePointerCapture(e.pointerId);
+                                        handlePointerUp();
+                                    }}
+                                    onPointerCancel={handlePointerUp}
                                 />
                             </div>
 
@@ -375,10 +377,10 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
                                     type="range"
                                     min="0.5"
                                     max="3"
-                                    step="0.1"
+                                    step="0.01"
                                     value={localScale}
                                     onChange={(e) => handleScaleChange(parseFloat(e.target.value))}
-                                    className="w-full h-3 bg-white/80 rounded-lg appearance-none cursor-pointer slider"
+                                    className="w-full h-3 bg-white/80 rounded-lg appearance-none cursor-pointer slider !transition-none"
                                     style={{
                                         background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((localScale - 0.5) / (3 - 0.5)) * 100}%, rgba(255,255,255,0.3) ${((localScale - 0.5) / (3 - 0.5)) * 100}%, rgba(255,255,255,0.3) 100%)`
                                     }}
@@ -397,7 +399,7 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
                                         max="200"
                                         value={localX}
                                         onChange={(e) => handleXChange(parseInt(e.target.value))}
-                                        className="w-full h-3 bg-white/80 rounded-lg appearance-none cursor-pointer slider"
+                                        className="w-full h-3 bg-white/80 rounded-lg appearance-none cursor-pointer slider !transition-none"
                                         style={{
                                             background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((localX + 200) / 400) * 100}%, rgba(255,255,255,0.3) ${((localX + 200) / 400) * 100}%, rgba(255,255,255,0.3) 100%)`
                                         }}
@@ -413,7 +415,7 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
                                         max="200"
                                         value={localY}
                                         onChange={(e) => handleYChange(parseInt(e.target.value))}
-                                        className="w-full h-3 bg-white/80 rounded-lg appearance-none cursor-pointer slider"
+                                        className="w-full h-3 bg-white/80 rounded-lg appearance-none cursor-pointer slider !transition-none"
                                         style={{
                                             background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((localY + 200) / 400) * 100}%, rgba(255,255,255,0.3) ${((localY + 200) / 400) * 100}%, rgba(255,255,255,0.3) 100%)`
                                         }}
@@ -424,15 +426,15 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
 
                         {/* Info and Actions */}
                         <div className="flex-1 space-y-6">
-                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                                <h3 className="font-semibold text-white mb-2">Your Details</h3>
-                                <p className="text-sm text-white/90">
+                            <div className="bg-black/30 md:bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20">
+                                <h3 className="font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] mb-2">Your Details</h3>
+                                <p className="text-sm text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
                                     <span className="font-medium">Name:</span> {userInfo.name}
                                 </p>
-                                <p className="text-sm text-white/90">
+                                <p className="text-sm text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
                                     <span className="font-medium">Section:</span> {userInfo.section}
                                 </p>
-                                <p className="text-sm text-white/90">
+                                <p className="text-sm text-white/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
                                     <span className="font-medium">Status:</span> {userInfo.status.charAt(0).toUpperCase() + userInfo.status.slice(1)}
                                 </p>
                             </div>
@@ -450,9 +452,9 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
                                 </button>
 
                                 {/* Caption Section */}
-                                <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4 mt-4">
-                                    <h3 className="text-sm font-semibold text-white mb-2">Your Caption:</h3>
-                                    <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded p-3 text-sm text-white mb-3">
+                                <div className="bg-black/30 md:bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-4 mt-4">
+                                    <h3 className="text-sm font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] mb-2">Your Caption:</h3>
+                                    <div className="bg-white/20 md:bg-white/20 backdrop-blur-sm border border-white/30 rounded p-3 text-sm text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] mb-3">
                                         What&apos;s up, Explorers! I&apos;m {userInfo.name} from {userInfo.section}, and I&apos;m ready to kick off this semester as a proud BSIT student here at 𝗣𝗼𝗹𝘆𝘁𝗲𝗰𝗵𝗻𝗶𝗰 𝗨𝗻𝗶𝘃𝗲𝗿𝘀𝗶𝘁𝘆 𝗼𝗳 𝘁𝗵𝗲 𝗣𝗵𝗶𝗹𝗶𝗽𝗽𝗶𝗻𝗲𝘀 – 𝗦𝗮𝗻 𝗣𝗲𝗱𝗿𝗼 𝗖𝗮𝗺𝗽𝘂𝘀.
                                         <br /><br />
                                         A new chapter begins, and I&apos;m all set to face the challenges, embrace the opportunities, and make the most out of every moment this semester has to offer. Here&apos;s to growth, learning, and memories worth keeping as we continue this BSIT journey together.
@@ -467,7 +469,7 @@ A new chapter begins, and I\'m all set to face the challenges, embrace the oppor
                                                 duration: 2000,
                                             });
                                         }}
-                                        className="w-full py-2 px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg font-medium transition-colors backdrop-blur-sm border border-white/30"
+                                        className="w-full py-2 px-4 bg-blue-600/90 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors backdrop-blur-sm border border-white/40"
                                     >
                                         📋 Copy Caption
                                     </button>
@@ -475,14 +477,14 @@ A new chapter begins, and I\'m all set to face the challenges, embrace the oppor
 
                                 <button
                                     onClick={onBack}
-                                    className="w-full py-3 px-4 border border-white/30 rounded-lg font-medium text-white hover:bg-white/10 transition-colors backdrop-blur-sm"
+                                    className="w-full py-3 px-4 border border-white/40 rounded-lg font-semibold text-white hover:bg-white/15 transition-colors backdrop-blur-sm"
                                 >
                                     Upload Different Photo
                                 </button>
 
                                 <button
                                     onClick={onStartOver}
-                                    className="w-full py-2 px-4 text-sm text-white/80 hover:text-white transition-colors"
+                                    className="w-full py-2 px-4 text-sm text-white/90 hover:text-white transition-colors drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
                                 >
                                     Start Over with New Info
                                 </button>
