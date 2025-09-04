@@ -58,7 +58,7 @@ export default function ImageUpload({ userInfo, onImageUpload, onBack }: ImageUp
     return (
         <BackgroundImage>
             <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-                <div className="bg-white/15 md:bg-white/20 backdrop-blur-xl rounded-2xl shadow-xl p-6 md:p-8 w-full max-w-lg border border-white/30">
+                <div className="bg-black/60 md:bg-white/15 backdrop-blur-xl rounded-2xl shadow-xl p-6 md:p-8 w-full max-w-lg border border-white/30">
                     <div className="text-center mb-8">
                         <h1 className="text-2xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] mb-2">
                             Upload Your Photo
@@ -123,7 +123,7 @@ export default function ImageUpload({ userInfo, onImageUpload, onBack }: ImageUp
                     <div className="flex gap-3 mt-6">
                         <button
                             onClick={onBack}
-                            className="flex-1 py-3 px-4 border border-white/40 rounded-lg font-semibold text-white hover:bg-white/15 transition-colors backdrop-blur-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
+                            className="appearance-none flex-1 py-3 px-4 border border-white/40 rounded-lg font-semibold text-white bg-black/60 hover:bg-black/70 transition-colors backdrop-blur-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
                         >
                             Back
                         </button>

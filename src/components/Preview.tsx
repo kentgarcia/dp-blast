@@ -41,6 +41,7 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [isExporting, setIsExporting] = useState(false);
+    const initializedRef = useRef(false);
 
     // Local UI state for immediate, smooth movement
     const [localScale, setLocalScale] = useState(imagePosition.scale);
@@ -111,13 +112,26 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
                 img.src = uploadedImage;
             });
 
-            // Initialize default draw size using the actual image intrinsic size if not provided
-            if (!imagePosition.width || !imagePosition.height) {
+            // Initialize preserving aspect ratio (cover the square) and center once
+            if (!initializedRef.current) {
+                const coverScale = Math.max(PREVIEW_SIZE / img.width, PREVIEW_SIZE / img.height);
+                const baseWidth = Math.round(img.width * coverScale);
+                const baseHeight = Math.round(img.height * coverScale);
+                const centeredX = Math.round((PREVIEW_SIZE - baseWidth) / 2);
+                const centeredY = Math.round((PREVIEW_SIZE - baseHeight) / 2);
+
+                setLocalScale(1);
+                setLocalX(centeredX);
+                setLocalY(centeredY);
                 onPositionUpdate({
                     ...imagePosition,
-                    width: Math.min(img.width, PREVIEW_SIZE),
-                    height: Math.min(img.height, PREVIEW_SIZE),
+                    width: baseWidth,
+                    height: baseHeight,
+                    x: centeredX,
+                    y: centeredY,
+                    scale: 1,
                 });
+                initializedRef.current = true;
             }
 
             setUserImageLoaded(img);
@@ -170,9 +184,9 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
         ctx.clearRect(0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
 
         try {
-            // Draw user image with current position and scale
-            const scaledWidth = imagePosition.width * localScale;
-            const scaledHeight = imagePosition.height * localScale;
+            // Draw user image with current position and scale (preserve aspect via base width/height)
+            const scaledWidth = (imagePosition.width || PREVIEW_SIZE) * localScale;
+            const scaledHeight = (imagePosition.height || PREVIEW_SIZE) * localScale;
 
             ctx.drawImage(
                 userImageLoaded,
@@ -228,8 +242,8 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
             // Scale up the position and dimensions for high-res export
             const highResX = localX * SCALE_RATIO;
             const highResY = localY * SCALE_RATIO;
-            const highResWidth = imagePosition.width * localScale * SCALE_RATIO;
-            const highResHeight = imagePosition.height * localScale * SCALE_RATIO;
+            const highResWidth = (imagePosition.width || PREVIEW_SIZE) * localScale * SCALE_RATIO;
+            const highResHeight = (imagePosition.height || PREVIEW_SIZE) * localScale * SCALE_RATIO;
 
             ctx.drawImage(
                 userImg,
@@ -335,7 +349,7 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
     return (
         <BackgroundImage>
             <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-                <div className="bg-white/15 md:bg-white/20 backdrop-blur-xl rounded-2xl shadow-xl p-6 md:p-8 w-full max-w-4xl border border-white/30">
+                <div className="bg-black/60 md:bg-white/15 backdrop-blur-xl rounded-2xl shadow-xl p-6 md:p-8 w-full max-w-4xl border border-white/30">
                     <div className="text-center mb-8">
                         <h1 className="text-2xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] mb-2">
                             Adjust Your EXPLICIT DP
@@ -454,12 +468,10 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
                                 </button>
 
                                 {/* Caption Section */}
-                                <div className="bg-black/30 md:bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-4 mt-4">
+                                <div className="bg-black/50 md:bg-white/10 backdrop-blur-md border border-white/20 rounded-lg p-4 mt-4">
                                     <h3 className="text-sm font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] mb-2">Your Caption:</h3>
                                     <div className="bg-white/20 md:bg-white/20 backdrop-blur-sm border border-white/30 rounded p-3 text-sm text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] mb-3 whitespace-pre-wrap">
                                         {`Initializing… ⚙️💻🔧
-
-The wait is over—Academic Year 2025–2026 is officially here. As BSIT students, we're not just entering classrooms; we're stepping into a space where ideas turn into code, and code turns into impact.
 
 I'm ${userInfo.name}, a ${statusLabel} Bachelor of Science in Information Technology student at Polytechnic University of the Philippines – San Pedro Campus. Here at PUP, we're more than just students—we're builders, problem-solvers, and visionaries shaping tomorrow's digital world.
 
@@ -471,8 +483,6 @@ Caption: Jenmarc Ronquillo`}
                                     <button
                                         onClick={() => {
                                             const caption = `Initializing… ⚙️💻🔧
-
-The wait is over—Academic Year 2025–2026 is officially here. As BSIT students, we're not just entering classrooms; we're stepping into a space where ideas turn into code, and code turns into impact.
 
 I'm ${userInfo.name}, a ${statusLabel} Bachelor of Science in Information Technology student at Polytechnic University of the Philippines – San Pedro Campus. Here at PUP, we're more than just students—we're builders, problem-solvers, and visionaries shaping tomorrow's digital world.
 

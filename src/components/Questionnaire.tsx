@@ -30,7 +30,7 @@ export default function Questionnaire({ onSubmit, onBack }: QuestionnaireProps) 
     return (
         <BackgroundImage>
             <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
-                <div className="bg-white/15 md:bg-white/20 backdrop-blur-xl rounded-2xl shadow-xl p-6 md:p-8 w-full max-w-md border border-white/30">
+                <div className="bg-black/60 md:bg-white/15 backdrop-blur-xl rounded-2xl shadow-xl p-6 md:p-8 w-full max-w-md border border-white/30">
                     <div className="text-center mb-8">
                         <h1 className="text-2xl md:text-3xl font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] mb-2">
                             EXPLICIT DP Blast
@@ -101,14 +101,14 @@ export default function Questionnaire({ onSubmit, onBack }: QuestionnaireProps) 
                             <button
                                 type="button"
                                 onClick={onBack}
-                                className="flex-1 py-3 px-4 border border-white/40 rounded-lg font-semibold text-white hover:bg-white/15 transition-colors backdrop-blur-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
+                                className="appearance-none flex-1 py-3 px-4 border border-white/40 rounded-lg font-semibold text-white bg-black/60 hover:bg-black/70 transition-colors backdrop-blur-sm drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
                             >
                                 Back
                             </button>
                             <button
                                 type="submit"
                                 disabled={!isValid}
-                                className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all backdrop-blur-sm ${isValid
+                                className={`appearance-none flex-1 py-3 px-4 rounded-lg font-semibold transition-all backdrop-blur-sm ${isValid
                                     ? 'bg-blue-600/90 hover:bg-blue-600 text-white shadow-md hover:shadow-lg border border-white/40'
                                     : 'bg-gray-500/30 text-gray-200 cursor-not-allowed border border-gray-500/40'
                                     }`}
