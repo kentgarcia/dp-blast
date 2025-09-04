@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import BackgroundImage from './BackgroundImage';
 
 interface LandingPageProps {
     onGetStarted: () => void;
@@ -8,15 +9,7 @@ interface LandingPageProps {
 
 export default function LandingPage({ onGetStarted }: LandingPageProps) {
     return (
-        <div
-            className="min-h-screen relative overflow-hidden bg-cover bg-center bg-fixed"
-            style={{ backgroundImage: 'url(/bg_hero.png)' }}
-        >
-            {/* Overlay for better content readability */}
-            <div className="absolute inset-0 bg-blue-900/20 z-0"></div>
-
-            {/* Gradient Overlay for better text readability */}
-            <div className="fixed inset-0 bg-gradient-to-b from-blue-900/60 to-blue-900/80 z-5"></div>
+        <BackgroundImage>
 
             {/* Content Overlay */}
             <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6">
@@ -58,6 +51,6 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
                     Upload your photo, add your information, and create your personalized display picture with your status frame.
                 </p>
             </div>
-        </div>
+        </BackgroundImage>
     );
 }

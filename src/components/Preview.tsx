@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import toast from 'react-hot-toast';
 import { UserInfo, ImagePosition } from '@/types';
 
 interface PreviewProps {
@@ -207,8 +208,15 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
             link.href = canvas.toDataURL('image/png', 1.0);
             link.click();
 
+            toast.success('High-resolution image downloaded! 🎉', {
+                duration: 3000,
+            });
+
         } catch (error) {
             console.error('Error exporting image:', error);
+            toast.error('Failed to export image. Please try again.', {
+                duration: 4000,
+            });
         } finally {
             setIsExporting(false);
         }
@@ -258,12 +266,9 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
 
     return (
         <div
-            className="min-h-screen relative overflow-hidden bg-cover bg-center bg-fixed"
+            className="min-h-screen relative overflow-hidden bg-cover bg-center"
             style={{ backgroundImage: 'url(/bg_hero.png)' }}
         >
-            {/* Overlay for better content readability */}
-            <div className="absolute inset-0 bg-blue-900/20 z-0"></div>
-
             <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
                 <div className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-xl p-8 w-full max-w-4xl border border-white/30">
                     <div className="text-center mb-8">
@@ -362,13 +367,6 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
                                 </p>
                             </div>
 
-                            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                                <h3 className="font-semibold text-white mb-2">High Resolution Export</h3>
-                                <p className="text-sm text-white/90">
-                                    Your image will be exported at 3000x3000 pixels for best quality.
-                                </p>
-                            </div>
-
                             <div className="space-y-3">
                                 <button
                                     onClick={exportHighRes}
@@ -395,7 +393,9 @@ export default function Preview({ userInfo, uploadedImage, imagePosition, onPosi
 
 A new chapter begins, and I\'m all set to face the challenges, embrace the opportunities, and make the most out of every moment this semester has to offer. Here\'s to growth, learning, and memories worth keeping as we continue this BSIT journey together.`;
                                             navigator.clipboard.writeText(caption);
-                                            alert('Caption copied to clipboard!');
+                                            toast.success('Caption copied to clipboard! 📋', {
+                                                duration: 2000,
+                                            });
                                         }}
                                         className="w-full py-2 px-4 bg-white/20 hover:bg-white/30 text-white rounded-lg font-medium transition-colors backdrop-blur-sm border border-white/30"
                                     >

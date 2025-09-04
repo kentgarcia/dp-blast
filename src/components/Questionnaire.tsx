@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import BackgroundImage from './BackgroundImage';
 import { UserInfo, Status } from '@/types';
 
 interface QuestionnaireProps {
@@ -27,16 +28,7 @@ export default function Questionnaire({ onSubmit, onBack }: QuestionnaireProps) 
     const isValid = formData.name && formData.section && formData.status;
 
     return (
-        <div
-            className="min-h-screen relative overflow-hidden bg-cover bg-center bg-fixed"
-            style={{ backgroundImage: 'url(/bg_hero.png)' }}
-        >
-            {/* Overlay for better content readability */}
-            <div className="absolute inset-0 bg-blue-900/20 z-0"></div>
-
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-900/60 to-blue-900/80"></div>
-
+        <BackgroundImage>
             <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
                 <div className="bg-white/20 backdrop-blur-lg rounded-2xl shadow-xl p-8 w-full max-w-md border border-white/30">
                     <div className="text-center mb-8">
@@ -127,6 +119,6 @@ export default function Questionnaire({ onSubmit, onBack }: QuestionnaireProps) 
                     </form>
                 </div>
             </div>
-        </div>
+        </BackgroundImage>
     );
 }

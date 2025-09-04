@@ -15,3 +15,16 @@ body {
   font-family: var(--font-poppins), "Poppins", sans-serif;
   font-weight: 400;
 }
+
+.hero-background {
+  background-image: url("/bg_hero.png") !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.hero-background-inline {
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
